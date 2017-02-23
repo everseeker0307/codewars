@@ -7,22 +7,59 @@ import java.math.BigInteger;
  * Created by everseeker on 2017/2/22.
  */
 public class N_ParasiticNumbersEndingInN {
+
     public static String calculateSpecial(int lastDigit, int radix) {
-        StringBuffer repetend = new StringBuffer();
-        int len = calRepetend(lastDigit * radix - 1, radix, repetend);
-        BigDecimal bd = new BigDecimal("0." + new BigInteger(repetend.toString(), radix).toString());
-        System.out.println("bd = " + bd.toString());
+        if (lastDigit == 1)
+            return "1";
+        int maxDivisor = lastDigit * radix - 1;
+        int divisor;
+        int repetendLength;
+        BigDecimal[] bds = new BigDecimal[radix - lastDigit];
         for (int i = lastDigit; i < radix; i++) {
-            BigDecimal tmpBig = bd.multiply(BigDecimal.valueOf(i));
-            String tmpStr =  tmpBig.compareTo(BigDecimal.ONE) > 0 ? tmpBig.toString().replace(".", "") : tmpBig.toString().substring(2);
-            System.out.println(i + "  " + new BigInteger(tmpStr, 10).toString(radix));
+            if (i != 1 && maxDivisor % i == 0) {
+                divisor = maxDivisor / i;
+                if (divisor % 2 == 0 || divisor % 5 == 0) {
+                    continue;
+                }
+                repetendLength = calRepetend(divisor, radix);
+//                System.out.println(i + " " + repetendLength);
+                bds[i-lastDigit] = BigDecimal.valueOf(Math.pow(radix, repetendLength) - 1).divide(BigDecimal.valueOf(divisor), repetendLength, BigDecimal.ROUND_DOWN);
+            } else {
+                repetendLength = calRepetend(maxDivisor, radix);
+//                System.out.println(i + " " + repetendLength);
+                bds[i-lastDigit] = BigDecimal.valueOf(Math.pow(radix, repetendLength) - 1).multiply(BigDecimal.valueOf(i)).divide(BigDecimal.valueOf(maxDivisor), repetendLength + 2, BigDecimal.ROUND_DOWN);
+            }
+//            System.out.println(bds[i-lastDigit]);
         }
+        BigDecimal min = bds[0];
+        for (BigDecimal b : bds) {
+            if (b != null && min.compareTo(b) > 0)
+                min = b;
+        }
+        String minStr = min.toString();
+
+        return new BigInteger(minStr.substring(0, minStr.indexOf(".")), 10).toString(radix);
+    }
+
+    public static int calRepetend(int n, int radix) {
+        int count = 0;
+        int remainder = 1;
+        while (true) {
+            count++;
+            remainder = radix * remainder % n;
+            if (remainder == 1)
+                return count;
+        }
+    }
+
+    public static String calculateSpecial2(int lastDigit, int radix) {
+        StringBuffer repetend = new StringBuffer();
+        calRepetend(lastDigit * radix - 1, radix, repetend);
+        BigDecimal bd = new BigDecimal("0." + new BigInteger(repetend.toString(), radix).toString());
         BigDecimal bdn = bd.multiply(BigDecimal.valueOf(lastDigit));
-//        System.out.println("bdn = " + bdn.toString());
 
         String tmp = bdn.compareTo(BigDecimal.ONE) > 0 ? bdn.toString().replace(".", "") : bdn.toString().substring(2);
         String res = new BigInteger(tmp, 10).toString(radix);
-//        System.out.println(res);
         return res;
     }
 
@@ -38,13 +75,7 @@ public class N_ParasiticNumbersEndingInN {
         int remainder = 1;
         while (true) {
             int res = radix * remainder / n;
-//            if (radix == 16) {
-//                if (res > 9)
-//                    repetend.append((char)('a' + res - 10));
-//                else
-//                    repetend.append(res);
-//            } else
-                repetend.append(res);
+            repetend.append(res);
             count++;
             remainder = radix * remainder % n;
             if (remainder == 1)
@@ -52,15 +83,12 @@ public class N_ParasiticNumbersEndingInN {
         }
     }
 
-    /**
-     * 定理：一个分母为N的循环小数的循环节位数最多不超过N-1位。
-     *
-     */
-
     public static void main(String[] args) {
-//        StringBuffer sb = new StringBuffer();
-//        calRepetend(5, 10, sb);
-//        System.out.println(sb);
-        calculateSpecial(3, 16);
+        System.out.println(calculateSpecial(4, 10));
+        System.out.println(calculateSpecial(5, 10));
+        System.out.println(calculateSpecial(4, 16));
+        System.out.println(calculateSpecial(3, 16));
+        //calculateSpecial(2, 8) 测试没有通过
+        System.out.println(calculateSpecial(2, 8));
     }
 }
